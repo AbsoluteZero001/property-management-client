@@ -1,7 +1,6 @@
-# 小区物业管理系统 - 客户端
+<img width="724" height="151" alt="image" src="https://github.com/user-attachments/assets/725386f9-b81b-4c3c-819f-21dcf68c4928" /># 小区物业管理系统 - 客户端
 
-基于 Spring Boot 3.2.4 + MyBatis 3.0.3 + Java 17 的小区物业管理系统客户端模块，
-由成都工业职业技术学院开发，用于实现业主、楼栋、用户管理等功能。
+基于 Spring Boot 3.2.4 + MyBatis 3.0.3 + Java 17 的小区物业管理系统客户端模块，，用于实现业主、楼栋、用户管理等功能。
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.4-brightgreen)](https://spring.io/projects/spring-boot)
 [![MyBatis](https://img.shields.io/badge/MyBatis-3.0.3-blue)](https://mybatis.org/mybatis-3/)
@@ -199,3 +198,7 @@ java -jar your-application.jar --DB_USERNAME=your_username --DB_PASSWORD=your_pa
 - 遵循项目现有的代码风格
 - 添加适当的测试用例
 - 更新相关文档
+
+## 许可证
+
+MIT License
