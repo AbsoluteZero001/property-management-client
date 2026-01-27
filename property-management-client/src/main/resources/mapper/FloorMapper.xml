@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.springboot2.mapper.FloorMapper">
+
+    <!-- 批量插入楼层 -->
+    <insert id="insertFloors" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="floorId" keyColumn="floor_id">
+        INSERT INTO floor (floor_id, belong_building, floor_number, room_number)
+        VALUES
+        <foreach collection="list" item="item" index="i" separator=",">
+            (#{item.floorId}, #{item.belongBuilding}, #{item.floorNumber}, #{item.roomNumber})
+        </foreach>
+    </insert>
+
+    <!-- 根据楼栋ID查询楼层列表 -->
+    <select id="floorsOfBuilding" resultType="com.springboot.springboot2.pojo.Floor" parameterType="int">
+        SELECT floor_id, belong_building, floor_number, room_number
+        FROM floor
+        WHERE belong_building = #{id}
+    </select>
+
+</mapper>

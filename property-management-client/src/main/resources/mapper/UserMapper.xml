@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.springboot2.mapper.UserMapper">
+
+    <!-- ===================== 基础结果映射 ===================== -->
+    <resultMap id="baseColumns" type="com.springboot.springboot2.pojo.User">
+        <id column="userid" property="userId" javaType="java.lang.Integer"/>
+        <result column="username" property="username" javaType="java.lang.String"/>
+        <result column="account" property="account" javaType="java.lang.String"/>
+        <result column="idcard" property="idcard" javaType="java.lang.String"/>
+        <result column="gender" property="gender" javaType="java.lang.Short"/>
+        <result column="age" property="age" javaType="java.lang.Short"/>
+        <result column="user_type" property="userType" javaType="java.lang.Long"/>
+        <result column="user_status" property="userStatus" javaType="java.lang.Long"/>
+        <result column="user_roomid" property="userRoomId" javaType="java.lang.Short"/>
+    </resultMap>
+
+    <!-- ===================== 业主与房间关联 ===================== -->
+    <resultMap id="ownRoom" type="com.springboot.springboot2.pojo.User" extends="baseColumns">
+        <collection property="rooms"
+                    ofType="com.springboot.springboot2.pojo.Room"
+                    column="user_roomid"
+                    select="com.springboot.springboot2.mapper.RoomMapper.roomById"/>
+    </resultMap>
+
+    <!-- ===================== 新增用户 ===================== -->
+    <insert id="insertUser" parameterType="com.springboot.springboot2.pojo.User"
+            useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO user (username, account, password, idcard, gender, age, user_type, user_status, user_roomid)
+        VALUES (#{username}, #{account}, #{password}, #{idcard}, #{gender}, #{age}, #{userType}, #{userStatus}, #{userRoomId})
+    </insert>
+
+    <!-- ===================== 删除用户 ===================== -->
+    <delete id="deleteUserById" parameterType="int">
+        DELETE FROM user WHERE userid = #{id}
+    </delete>
+
+    <!-- ===================== 更新用户 ===================== -->
+    <update id="updateUser" parameterType="com.springboot.springboot2.pojo.User">
+        UPDATE user
+        SET
+            username = #{username},
+            account = #{account},
+            idcard = #{idcard},
+            gender = #{gender},
+            age = #{age},
+            user_type = #{userType},
+            user_status = #{userStatus},
+            user_roomid = #{userRoomId}
+        WHERE userid = #{userId}
+    </update>
+
+    <!-- ===================== 查询所有用户 ===================== -->
+    <select id="selectAllUsers" resultMap="baseColumns">
+        SELECT * FROM user
+    </select>
+
+    <!-- ===================== 根据账号查询 ===================== -->
+    <select id="selectUserByAccount" parameterType="string" resultMap="baseColumns">
+        SELECT * FROM user WHERE account = #{account}
+    </select>
+
+    <!-- ===================== 检查账号是否存在 ===================== -->
+    <select id="countByAccount" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM user WHERE account = #{account}
+    </select>
+
+    <!-- ===================== 根据 ID 查询用户 ===================== -->
+    <select id="queryById" resultMap="baseColumns">
+        SELECT userid AS userId, username, account, password, idcard, gender, age,
+               user_type AS userType, user_status AS userStatus, user_roomid AS userRoomId
+        FROM user
+        WHERE userid = #{id}
+    </select>
+
+    <!-- ===================== 分页查询业主 ===================== -->
+    <select id="owners" resultMap="ownRoom">
+        SELECT userid,
+               username,
+               gender,
+               age,
+               user_type,
+               user_status,
+               user_roomid
+        FROM user
+        WHERE user_type = 3
+    </select>
+
+    <!-- ===================== 修改用户状态 ===================== -->
+    <update id="changeUserStatus" parameterType="com.springboot.springboot2.pojo.User">
+        UPDATE user
+        SET user_status = #{userStatus}
+        WHERE userid = #{userId}
+    </update>
+
+    <!-- ===================== UnpaidOwner 映射 ===================== -->
+    <resultMap id="unpaidowner" type="com.springboot.springboot2.pojo.UnpaidOwner">
+        <association property="user" resultMap="baseColumns"/>
+        <association property="amount" javaType="com.springboot.springboot2.pojo.Amount" autoMapping="true"/>
+        <association property="room" javaType="com.springboot.springboot2.pojo.Room" autoMapping="true"/>
+    </resultMap>
+
+    <!-- ===================== 欠费业主列表查询 ===================== -->
+    <select id="unpaidOwnerList"
+            parameterType="int"
+            resultMap="unpaidowner">
+
+        SELECT u.userid        AS userid,
+               u.username      AS username,
+               u.account       AS account,
+               u.idcard        AS idcard,
+               u.gender        AS gender,
+               u.age           AS age,
+               u.user_type     AS user_type,
+               u.user_status   AS user_status,
+               u.user_roomid   AS user_roomid,
+
+               a.amount_id     AS amountId,
+               a.amount_date   AS amountDate,
+               a.amount        AS amount,
+               a.amount_type   AS amountType,
+               a.is_paid       AS isPaid,
+               a.amount_roomid AS amountRoomId,
+
+               r.room_id       AS roomId,
+               r.room_code     AS roomCode
+
+        FROM amount a
+                 LEFT JOIN room r ON a.amount_roomid = r.room_id
+                 LEFT JOIN user u ON r.room_id = u.user_roomid
+
+        WHERE a.is_paid = 2
+          AND a.amount_type = #{typeId}
+
+        ORDER BY a.amount_date ASC, u.username ASC
+    </select>
+
+</mapper>

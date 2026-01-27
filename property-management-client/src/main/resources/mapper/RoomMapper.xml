@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.springboot2.mapper.RoomMapper">
+
+    <!-- 查询指定楼层房间 -->
+    <select id="roomsOfFloor" resultType="com.springboot.springboot2.pojo.Room" parameterType="int">
+        SELECT room_id,
+               room_code,
+               room_floor_id,
+               built_up_area,
+               room_status
+        FROM room
+        WHERE room_floor_id = #{floorId}
+    </select>
+
+    <!-- 根据用户房间ID查询房间列表 -->
+    <select id="getRoomsByUserRoomId" resultType="com.springboot.springboot2.pojo.Room" parameterType="int">
+        SELECT room_id,
+               room_code,
+               room_floor_id,
+               built_up_area,
+               room_status
+        FROM room
+        WHERE room_id = #{userRoomId}
+    </select>
+
+    <!-- 分页查询房间信息，可带多条件筛选 -->
+    <select id="pageOfRooms" resultType="com.springboot.springboot2.pojo.Room" parameterType="map">
+        SELECT
+        r.room_id,
+        r.room_code,
+        r.room_floor_id,
+        r.built_up_area,
+        r.room_status,
+        b.building_name
+        FROM room r
+        JOIN floor f ON r.room_floor_id = f.floor_id
+        JOIN building b ON f.belong_building = b.building_id
+        <where>
+            <!-- 建筑面积 -->
+            <if test="params.builtArea != null and params.builtArea != ''">
+                AND r.built_up_area = #{params.builtArea}
+            </if>
+            <!-- 房间状态 -->
+            <if test="params.status != null and params.status != ''">
+                AND r.room_status = #{params.status}
+            </if>
+            <!-- 建筑号 -->
+            <if test="params.buildingNumber != null and params.buildingNumber != ''">
+                AND r.room_code LIKE CONCAT(#{params.buildingNumber}, '-%')
+            </if>
+            <!-- 楼层号 -->
+            <if test="params.floorNumber != null and params.floorNumber != ''">
+                AND r.room_code LIKE CONCAT('%-', #{params.floorNumber}, '-%')
+            </if>
+            <!-- 可选楼层ID筛选 -->
+            <if test="params.floorId != null and params.floorId != ''">
+                AND r.room_floor_id = #{params.floorId}
+            </if>
+        </where>
+        ORDER BY r.room_id ASC
+    </select>
+
+    <!-- 批量插入房间 -->
+    <insert id="insertRooms" parameterType="java.util.List">
+        INSERT INTO room (room_code, room_floor_id, built_up_area, room_status)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.roomCode}, #{item.roomFloorId}, #{item.builtUpArea}, #{item.roomStatus})
+        </foreach>
+    </insert>
+    <!-- 批量修改房间状态 -->
+    <update id="changeRoomStatus" parameterType="map">
+        UPDATE room
+        SET room_status = #{status}
+        WHERE room_id IN
+        <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    <!-- 根据房间ID查询单个房间 -->
+    <select id="roomById" resultType="com.springboot.springboot2.pojo.Room" parameterType="int">
+        SELECT
+            room_id AS roomId,
+            room_code AS roomCode,
+            room_floor_id AS roomFloorId,
+            built_up_area AS builtUpArea,
+            room_status AS roomStatus
+        FROM room
+        WHERE room_id = #{id}
+    </select>
+    <!-- RoomMapper.xml -->
+    <select id="countById" resultType="int" parameterType="short">
+        SELECT COUNT(*) FROM room WHERE room_id = #{roomId}
+    </select>
+
+</mapper>

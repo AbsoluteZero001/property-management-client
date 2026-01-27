@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springboot.springboot2.mapper.PayMapper">
+
+    <!-- 主查询：根据条件分页查询支付信息 -->
+    <select id="selectPayInfoOnCondition" resultMap="payInfoMap">
+        SELECT
+        p.pay_id,
+        p.pay_date,
+        p.pay AS pay,               <!-- ✅ 改 pay_amount 为 pay -->
+        b.building_id,
+        b.building_name,
+        r.room_id,
+        r.room_code AS roomCode,    <!-- ✅ 改 room_number 为 room_code，并加别名 -->
+        u.userId,
+        u.username,
+        u.idcard AS idcard          <!-- ✅ 保持一致，小写 -->
+        FROM pay p
+        JOIN room r ON p.pay_room_id = r.room_id
+        JOIN floor f ON r.room_floor_id = f.floor_id
+        JOIN building b ON f.belong_building = b.building_id
+        LEFT JOIN user u ON u.user_roomid = r.room_id
+        <where>
+            <if test="start != null and end != null">
+                p.pay_date BETWEEN #{start} AND #{end}
+            </if>
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND u.idcard LIKE CONCAT('%', #{idCard}, '%')
+            </if>
+            <if test="floorId != null">
+                AND f.floor_id = #{floorId}
+            </if>
+            <if test="buildingId != null">
+                AND b.building_id = #{buildingId}
+            </if>
+        </where>
+    </select>
+
+    <!-- resultMap 映射 PayInfo 及其子对象 -->
+    <resultMap id="payInfoMap" type="com.springboot.springboot2.pojo.PayInfo">
+
+        <!-- 支付信息 -->
+        <association property="pay" javaType="com.springboot.springboot2.pojo.Pay">
+            <id column="pay_id" property="payId"/>
+            <result column="pay_date" property="payDate"/>
+            <result column="pay" property="pay"/> <!-- ✅ 修改 -->
+        </association>
+
+        <!-- 建筑信息 -->
+        <association property="building" javaType="com.springboot.springboot2.pojo.Building">
+            <id column="building_id" property="buildingId"/>
+            <result column="building_name" property="buildingName"/>
+        </association>
+
+        <!-- 房间信息 -->
+        <association property="room" javaType="com.springboot.springboot2.pojo.Room">
+            <id column="room_id" property="roomId"/>
+            <result column="roomCode" property="roomCode"/> <!-- ✅ 修改 -->
+        </association>
+
+        <!-- 用户信息 -->
+        <association property="user" javaType="com.springboot.springboot2.pojo.User">
+            <id column="userId" property="userId"/>
+            <result column="username" property="username"/>
+            <result column="idcard" property="idcard"/> <!-- ✅ 修改 -->
+        </association>
+    </resultMap>
+
+    <!-- PayMapper 子查询：根据 pay_id 获取完整支付记录 -->
+    <select id="queryById" resultType="com.springboot.springboot2.pojo.Pay">
+        SELECT *
+        FROM pay
+        WHERE pay_id = #{id}
+    </select>
+
+</mapper>
